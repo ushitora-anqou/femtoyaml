@@ -265,6 +265,8 @@ private:
             case ':':
                 if (is_blankz(st_.peek(1))) goto end;
                 break;
+            case EOF:
+                goto end;
             }
             ss << (char)st_.next();
         }
@@ -453,6 +455,12 @@ inline value load(std::istream& is)
     // for (auto&& tk : tokens)
     //    std::cout << femtoyaml::detail::to_string(tk) << std::endl;
     return femtoyaml::detail::parser(tokens.begin()).get();
+}
+
+inline value load_string(const std::string& src)
+{
+    std::stringstream ss(src);
+    return load(ss);
 }
 
 }  // namespace femtoyaml
