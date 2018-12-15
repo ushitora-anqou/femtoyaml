@@ -101,6 +101,30 @@ public:
     }
 };
 
+template <>
+list& value::get()
+{
+    return *std::get<std::shared_ptr<list>>(val_);
+}
+
+template <>
+const list& value::get() const
+{
+    return *std::get<std::shared_ptr<list>>(val_);
+}
+
+template <>
+map& value::get()
+{
+    return *std::get<std::shared_ptr<map>>(val_);
+}
+
+template <>
+const map& value::get() const
+{
+    return *std::get<std::shared_ptr<map>>(val_);
+}
+
 namespace detail {
 
 class stream {
