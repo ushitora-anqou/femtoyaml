@@ -27,10 +27,12 @@ auto match_with(Variant&& var, Visitor&&... visitors)
     return std::visit(overloaded{visitors...}, var);
 }
 
+class value;
+using list = std::vector<value>;
+using map = std::unordered_map<std::string, value>;
+
 class value {
 public:
-    using list = std::vector<value>;
-    using map = std::unordered_map<std::string, value>;
     using type = std::variant<int, std::string, std::shared_ptr<list>,
                               std::shared_ptr<map>>;
     type val_;
