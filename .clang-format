@@ -1,0 +1,8 @@
+BasedOnStyle: google
+AccessModifierOffset : -4
+AllowShortIfStatementsOnASingleLine : true
+AllowShortFunctionsOnASingleLine : None
+AlwaysBreakTemplateDeclarations : true
+BreakBeforeBraces : Stroustrup
+IndentWidth : 4
+IndentCaseLabels : false
