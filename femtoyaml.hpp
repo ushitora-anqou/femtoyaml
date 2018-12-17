@@ -70,6 +70,11 @@ public:
         return std::get<T>(val_);
     }
 
+    value& operator[](int index);
+    const value& operator[](int index) const;
+    value& operator[](const std::string& key);
+    const value& operator[](const std::string& key) const;
+
     template <class IntHandler, class StringHandler, class ListHandler,
               class MapHandler>
     auto visit(IntHandler ih, StringHandler sh, ListHandler lh,
@@ -149,6 +154,26 @@ template <>
 const map& value::get() const
 {
     return *std::get<std::shared_ptr<map>>(val_);
+}
+
+value& value::operator[](int index)
+{
+    return get<list>().at(index);
+}
+
+const value& value::operator[](int index) const
+{
+    return get<list>().at(index);
+}
+
+value& value::operator[](const std::string& key)
+{
+    return get<map>().at(key);
+}
+
+const value& value::operator[](const std::string& key) const
+{
+    return get<map>().at(key);
 }
 
 namespace detail {
