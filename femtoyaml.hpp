@@ -107,7 +107,9 @@ public:
         return std::holds_alternative<std::shared_ptr<map>>(val_);
     }
 
-    std::string to_string() const
+    std::string to_string() const;
+
+    std::string to_debug_string() const
     {
         std::stringstream ss;
         visit([&](int val) { ss << "int(" << val << ")"; },
@@ -115,14 +117,15 @@ public:
               [&](const list& lst) {
                   ss << "list(";
                   for (int i = 0; i < lst.size() - 1; i++)
-                      ss << lst[i].to_string() << ", ";
-                  ss << lst.back().to_string();
+                      ss << lst[i].to_debug_string() << ", ";
+                  ss << lst.back().to_debug_string();
                   ss << ")";
               },
               [&](const map& m) {
                   std::vector<std::string> strs;
                   for (auto&& p : m)
-                      strs.emplace_back(p.first + ": " + p.second.to_string());
+                      strs.emplace_back(p.first + ": " +
+                                        p.second.to_debug_string());
                   ss << "map(";
                   for (int i = 0; i < strs.size() - 1; i++)
                       ss << strs[i] << ", ";
@@ -586,10 +589,10 @@ inline void serialize(std::ostream& os, const value& val)
     detail::serializer(os, val);
 }
 
-inline std::string to_yaml(const value& val)
+std::string value::to_string() const
 {
     std::stringstream ss;
-    serialize(ss, val);
+    serialize(ss, *this);
     return ss.str();
 }
 
