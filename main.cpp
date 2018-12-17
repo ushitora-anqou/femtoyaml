@@ -3,7 +3,6 @@
 
 int main()
 {
-    auto src = femtoyaml::load(std::cin);
-    std::cout << src.to_debug_string() << std::endl;
+    auto src = femtoyaml::load_string(femtoyaml::load(std::cin).to_string());
     std::cout << src.to_string();
 }
