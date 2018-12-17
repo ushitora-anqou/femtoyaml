@@ -75,16 +75,16 @@ public:
     value& operator[](const std::string& key);
     const value& operator[](const std::string& key) const;
 
-    template <class IntHandler, class StringHandler, class ListHandler,
-              class MapHandler>
-    auto visit(IntHandler ih, StringHandler sh, ListHandler lh,
-               MapHandler mh) const
+    template <class... Visitors>
+    auto visit(Visitors&&... visitors) const
     {
+        auto callback = overloaded{visitors...};
         return match_with(
-            val_, [&ih](int val) { return ih(val); },
-            [&sh](const std::string& str) { return sh(str); },
-            [&lh](const std::shared_ptr<list>& ptr) { return lh(*ptr); },
-            [&mh](const std::shared_ptr<map>& ptr) { return mh(*ptr); });
+            val_,
+            [&](const std::shared_ptr<list>& ptr) { return callback(*ptr); },
+            [&](const std::shared_ptr<map>& ptr) { return callback(*ptr); },
+            [&](int val) { return callback(val); },
+            [&](const std::string& str) { return callback(str); });
     }
 
     bool is_int() const
