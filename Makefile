@@ -1,5 +1,5 @@
 main: main.cpp femtoyaml.hpp
-	g++ -o $@ -std=c++17 -g3 -O0 $^
+	clang++ -std=c++17 -g3 -O0 main.cpp -o $@
 
 test: main test.sh
 	./test.sh

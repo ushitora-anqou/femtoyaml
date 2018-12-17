@@ -158,47 +158,72 @@ function unittest()
 #EOF
 #map(key: list(string(item 1), string(item 2)))"
 
-unittest "abc" "string(abc)"
+unittest "abc" "string(abc)
+abc"
 
-unittest "123" "string(123)"
+unittest "123" "string(123)
+123"
 
 unittest "
 - abc
-- def" "list(string(abc), string(def))"
+- def" "list(string(abc), string(def))
+- abc
+- def"
 
 unittest "
 -
     - def
     - ghi
-- jkl" "list(list(string(def), string(ghi)), string(jkl))"
+- jkl" "list(list(string(def), string(ghi)), string(jkl))
+- - def
+  - ghi
+- jkl"
+
 
 unittest "
 - item 1
 - item 2
 -
   - item 3.1
-  - item 3.2" "list(string(item 1), string(item 2), list(string(item 3.1), string(item 3.2)))"
+  - item 3.2" "list(string(item 1), string(item 2), list(string(item 3.1), string(item 3.2)))
+- item 1
+- item 2
+- - item 3.1
+  - item 3.2"
 
 unittest "
 - - item 1
-  - item 2" "list(list(string(item 1), string(item 2)))"
+  - item 2" "list(list(string(item 1), string(item 2)))
+- - item 1
+  - item 2"
 
 unittest "
 abc: def
-ghi: jkl" "map(ghi: string(jkl), abc: string(def))"
+ghi: jkl" "map(ghi: string(jkl), abc: string(def))
+ghi: jkl
+abc: def"
 
 unittest "
 -
   key 1: value 1
-  key 2: value 2" "list(map(key 2: string(value 2), key 1: string(value 1)))"
+  key 2: value 2" "list(map(key 2: string(value 2), key 1: string(value 1)))
+- key 2: value 2
+  key 1: value 1"
 
 unittest "
 - - item 1
   - item 2
 - key 1: value 1
-  key 2: value 2" "list(list(string(item 1), string(item 2)), map(key 2: string(value 2), key 1: string(value 1)))"
+  key 2: value 2" "list(list(string(item 1), string(item 2)), map(key 2: string(value 2), key 1: string(value 1)))
+- - item 1
+  - item 2
+- key 2: value 2
+  key 1: value 1"
 
 unittest "
 key:
 - item 1
-- item 2" "map(key: list(string(item 1), string(item 2)))"
+- item 2" "map(key: list(string(item 1), string(item 2)))
+key:
+- item 1
+- item 2"

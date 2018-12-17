@@ -70,33 +70,59 @@ public:
         return std::get<T>(val_);
     }
 
+    template <class IntHandler, class StringHandler, class ListHandler,
+              class MapHandler>
+    auto visit(IntHandler ih, StringHandler sh, ListHandler lh,
+               MapHandler mh) const
+    {
+        return match_with(
+            val_, [&ih](int val) { return ih(val); },
+            [&sh](const std::string& str) { return sh(str); },
+            [&lh](const std::shared_ptr<list>& ptr) { return lh(*ptr); },
+            [&mh](const std::shared_ptr<map>& ptr) { return mh(*ptr); });
+    }
+
+    bool is_int() const
+    {
+        return std::holds_alternative<int>(val_);
+    }
+
+    bool is_string() const
+    {
+        return std::holds_alternative<std::string>(val_);
+    }
+
+    bool is_list() const
+    {
+        return std::holds_alternative<std::shared_ptr<list>>(val_);
+    }
+
+    bool is_map() const
+    {
+        return std::holds_alternative<std::shared_ptr<map>>(val_);
+    }
+
     std::string to_string() const
     {
         std::stringstream ss;
-        std::visit(overloaded{[&](int val) { ss << "int(" << val << ")"; },
-                              [&](const std::string& str) {
-                                  ss << "string(" << str << ")";
-                              },
-                              [&](const std::shared_ptr<list>& ptr) {
-                                  const list& lst = *ptr;
-                                  ss << "list(";
-                                  for (int i = 0; i < lst.size() - 1; i++)
-                                      ss << lst[i].to_string() << ", ";
-                                  ss << lst.back().to_string();
-                                  ss << ")";
-                              },
-                              [&](const std::shared_ptr<map>& ptr) {
-                                  const map& m = *ptr;
-                                  std::vector<std::string> strs;
-                                  for (auto&& p : m)
-                                      strs.emplace_back(p.first + ": " +
-                                                        p.second.to_string());
-                                  ss << "map(";
-                                  for (int i = 0; i < strs.size() - 1; i++)
-                                      ss << strs[i] << ", ";
-                                  ss << strs.back() << ")";
-                              }},
-                   val_);
+        visit([&](int val) { ss << "int(" << val << ")"; },
+              [&](const std::string& str) { ss << "string(" << str << ")"; },
+              [&](const list& lst) {
+                  ss << "list(";
+                  for (int i = 0; i < lst.size() - 1; i++)
+                      ss << lst[i].to_string() << ", ";
+                  ss << lst.back().to_string();
+                  ss << ")";
+              },
+              [&](const map& m) {
+                  std::vector<std::string> strs;
+                  for (auto&& p : m)
+                      strs.emplace_back(p.first + ": " + p.second.to_string());
+                  ss << "map(";
+                  for (int i = 0; i < strs.size() - 1; i++)
+                      ss << strs[i] << ", ";
+                  ss << strs.back() << ")";
+              });
         return ss.str();
     }
 };
@@ -446,21 +472,100 @@ public:
     }
 };
 
+class serializer {
+private:
+    std::ostream& os_;
+    int column_;
+
+private:
+    template <class T>
+    void println(T&& src)
+    {
+        os_ << src << std::endl;
+        column_ = 0;
+    }
+
+    void print_char(char ch)
+    {
+        os_ << ch;
+        if (ch == '\n')
+            column_ = 0;
+        else
+            column_++;
+    }
+
+    void print_indent(int indent)
+    {
+        for (int i = column_; i < indent; i++) print_char(' ');
+    }
+
+    void do_serialize(const value& val, int indent)
+    {
+        val.visit(
+            [&](int val) {
+                print_indent(indent);
+                println(val);
+            },
+            [&](const std::string& str) {
+                print_indent(indent);
+                println(str);
+            },
+            [&](const list& lst) {
+                for (auto&& item : lst) {
+                    print_indent(indent);
+                    print_char('-');
+                    print_char(' ');
+                    do_serialize(item, indent + 2);
+                }
+            },
+            [&](const map& m) {
+                for (auto&& item : m) {
+                    print_indent(indent);
+                    if (item.second.is_int() || item.second.is_string()) {
+                        os_ << item.first << ": ";
+                        do_serialize(item.second, 0);
+                        continue;
+                    }
+                    println(item.first + ":");
+                    do_serialize(item.second,
+                                 item.second.is_list() ? indent : indent + 2);
+                }
+            });
+    }
+
+public:
+    serializer(std::ostream& os, const value& val) : os_(os), column_(0)
+    {
+        do_serialize(val, 0);
+    }
+};
 }  // namespace detail
 
 inline value load(std::istream& is)
 {
-    femtoyaml::detail::stream st = is;
-    auto tokens = femtoyaml::detail::tokenizer(st).get();
+    detail::stream st = is;
+    auto tokens = detail::tokenizer(st).get();
     // for (auto&& tk : tokens)
     //    std::cout << femtoyaml::detail::to_string(tk) << std::endl;
-    return femtoyaml::detail::parser(tokens.begin()).get();
+    return detail::parser(tokens.begin()).get();
 }
 
 inline value load_string(const std::string& src)
 {
     std::stringstream ss(src);
     return load(ss);
+}
+
+inline void serialize(std::ostream& os, const value& val)
+{
+    detail::serializer(os, val);
+}
+
+inline std::string to_yaml(const value& val)
+{
+    std::stringstream ss;
+    serialize(ss, val);
+    return ss.str();
 }
 
 }  // namespace femtoyaml
